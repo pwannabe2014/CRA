@@ -1,37 +1,10 @@
-from abc import abstractmethod, ABC
-
 from mission2.grade import GradeFactory
-
-
-class Score(ABC):
-    @property
-    @abstractmethod
-    def score(self):
-        pass
-
-
-class TrainingScore(Score):
-    @property
-    def score(self):
-        return 3
-
-
-class WeekendScore(Score):
-    @property
-    def score(self):
-        return 2
-
-
-class DefaultScore(Score):
-    @property
-    def score(self):
-        return 1
-
 
 class Player:
     BONUS_POINTS = 10
     WEDNESDAY_THRESHOLD = 9
     WEEKEND_THRESHOLD = 9
+    attendance_score = {"Training": 3, "Weekend": 2, "Normal": 1}
 
     def __init__(self, pid, name):
         self.pid = pid
@@ -86,13 +59,13 @@ class Player:
 
     def _calc_attendance_point(self, day_of_week):
         if day_of_week == "wednesday":
-            score = TrainingScore().score
+            score = self.attendance_score["Training"]
         elif day_of_week == "saturday":
-            score = WeekendScore().score
+            score = self.attendance_score["Weekend"]
         elif day_of_week == "sunday":
-            score = WeekendScore().score
+            score = self.attendance_score["Weekend"]
         else:
-            score = DefaultScore().score
+            score = self.attendance_score["Normal"]
         return score
 
     def add_attendance(self, day_of_week):

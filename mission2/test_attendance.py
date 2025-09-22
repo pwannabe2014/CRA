@@ -2,7 +2,8 @@ from unittest import mock
 
 import pytest
 from unittest.mock import mock_open
-from mission2.attendance import input_file, AttendanceSystem
+from mission2.main import input_file
+from mission2.attendance import AttendanceSystem
 from mission2.grade import GradeFactory, Gold, Silver, Normal, Grade
 from mission2.player import Player
 
