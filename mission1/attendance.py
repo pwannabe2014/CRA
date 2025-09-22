@@ -1,14 +1,13 @@
 from enum import IntEnum
+from typing import Dict
 
+BONUS_POINT = 10
+GOLD_MIN = 50
+SILVER_MIN = 30
+WEDNESDAY_THRESHOLD = 9
+WEEKEND_THRESHOLD = 9
 
-class DayofWeek(IntEnum):
-    Mon = 0
-    Tue = 1
-    Wed = 2
-    Thu = 3
-    Fri = 4
-    Sat = 5
-    Sun = 6
+grade_label = {"GOLD": 1, "SILVER": 2, "NORMAL": 0}
 
 
 class AttendanceScore(IntEnum):
@@ -17,70 +16,96 @@ class AttendanceScore(IntEnum):
     Default = 1
 
 
-TOTAL_ATTENDANCE_LIST = 500
-id_map = {}
-id_cnt = 0
+class Player:
+    def __init__(self, pid, name):
+        self.pid = pid
+        self.name = name
+        self.points = 0
+        self.grade = 0
+        self.attendances = {}
+        self.wednesday_count = 0
+        self.weekend_count = 0
 
-# dat[사용자ID][요일] # 코테에나 좋으니 수정 필요
-dat = [[0] * 100 for _ in range(100)]
-points = [0] * 100
-grade = [0] * 100
-names = [''] * 100
-wed = [0] * 100
-weeken = [0] * 100
+    def add_point(self, point):
+        self.points += point
+
+    def get_attendance(self, day_of_week):
+        return self.attendances.get(day_of_week, 0)
+
+    def record_attendance(self, day_of_week):
+        self.attendances[day_of_week] += 1
+
+
+players: Dict[str, Player] = {}
+next_pid = 0
+
+
+def add_attendance(day_of_week, player: Player):
+    player.record_attendance(day_of_week)
+    if day_of_week == "wednesday":  # 훈련일
+        point = AttendanceScore.Training
+        player.wednesday_count += 1
+    elif day_of_week == "saturday":  # 주말점수
+        point = AttendanceScore.Weekend
+        player.weekend_count += 1
+    elif day_of_week == "sunday":  # 주말점수
+        point = AttendanceScore.Weekend
+        player.weekend_count += 1
+    else:
+        point = AttendanceScore.Default
+
+    player.add_point(point)
+
+
+def get_or_create_player(name):
+    global next_pid  # 1시작으로 잡자
+    if name not in players:
+        next_pid += 1
+        players[name] = Player(next_pid, name)
+    return players[name]
+
 
 # 머리속에있는 스파게티를 풀어서 함수단위로 잘짜주세요. # 다끝나신분들은 퇴근
 def input2(name, day_of_week):
-    global id_cnt
-
-    registration_player_id(name)
-
-    player_id = id_map[name] # 이거그냥 id 아님 ?
-
-    add_point = 0
-    index = 0
-
-    if day_of_week == "monday":
-        index = 0
-        add_point += AttendanceScore.Default
-    elif day_of_week == "tuesday":
-        index = 1
-        add_point += AttendanceScore.Default
-    elif day_of_week == "wednesday":  # 훈련일
-        index = 2
-        add_point += AttendanceScore.Training
-        wed[player_id] += 1
-    elif day_of_week == "thursday":
-        index = 3
-        add_point += AttendanceScore.Default
-    elif day_of_week == "friday":
-        index = 4
-        add_point += AttendanceScore.Default
-    elif day_of_week == "saturday":  # 주말점수
-        index = 5
-        add_point += AttendanceScore.Weekend
-        weeken[player_id] += 1
-    elif day_of_week == "sunday":  # 주말점수
-        index = 6
-        add_point += AttendanceScore.Weekend
-        weeken[player_id] += 1
-
-    dat[player_id][index] += 1
-    points[player_id] += add_point
+    global next_pid
+    player = get_or_create_player(name)
+    add_attendance(day_of_week, player)
 
 
-def registration_player_id(name):
-    global id_cnt
-    if name not in id_map:
-        id_cnt += 1
-        id_map[name] = id_cnt
-        names[id_cnt] = name
+def print_result():
+    global next_pid
+    for player in players.values():
+        if player.get_attendance("wednesday") > WEDNESDAY_THRESHOLD:
+            player.points += 10
+        if player.get_attendance("saturday") + player.get_attendance("sunday") > WEEKEND_THRESHOLD:
+            player.points += 10
+
+        if player.points >= GOLD_MIN:
+            player.grade = grade_label["GOLD"]
+        elif player.points >= SILVER_MIN:
+            player.grade = grade_label["SILVER"]
+        else:
+            player.grade = 0
+
+        print(f"NAME : {player.name}, POINT : {player.points}, GRADE : ", end="")
+        if player.grade == grade_label["GOLD"]:
+            print("GOLD")
+        elif player.grade == grade_label["SILVER"]:
+            print("SILVER")
+        else:
+            print("NORMAL")
+
+    print("\nRemoved player")
+    print("==============")
+    for player in players.values():
+        if player.grade not in (1, 2) and player.wednesday_count == 0 and player.weekend_count == 0:
+            print(player.name)
 
 
-def input_file():  # 리팩하기 쉽지 않으니 잘 구분해주세요  # 숫자코드
+def input_file(limits=500):  # 리팩하기쉽지않으니 잘 구분해주세요  # 숫자코드를 읽는사람이 헷갈리죠
     try:
         with open("attendance_weekday_500.txt", encoding='utf-8') as f:
-            for _ in range(TOTAL_ATTENDANCE_LIST):
+            for _ in range(limits):
                 line = f.readline()
                 if not line:
                     break
@@ -88,32 +113,7 @@ def input_file():  # 리팩하기 쉽지 않으니 잘 구분해주세요  # 숫
                 if len(parts) == 2:
                     input2(parts[0], parts[1])
 
-        for i in range(1, id_cnt + 1):  # 최종id_cnt에 대해서 변화필요
-            if dat[i][DayofWeek.Wed] > 9:
-                points[i] += 10
-            if dat[i][DayofWeek.Sat] + dat[i][DayofWeek.Sun] > 9:
-                points[i] += 10
-
-            if points[i] >= 50:
-                grade[i] = 1
-            elif points[i] >= 30:
-                grade[i] = 2
-            else:
-                grade[i] = 0
-
-            print(f"NAME : {names[i]}, POINT : {points[i]}, GRADE : ", end="")
-            if grade[i] == 1:
-                print("GOLD")
-            elif grade[i] == 2:
-                print("SILVER")
-            else:
-                print("NORMAL")
-
-        print("\nRemoved player")
-        print("==============")
-        for i in range(1, id_cnt + 1):
-            if grade[i] not in (1, 2) and wed[i] == 0 and weeken[i] == 0:
-                print(names[i])
+        print_result()
 
     except FileNotFoundError:
         print("파일을 찾을 수 없습니다.")
