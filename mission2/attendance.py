@@ -1,12 +1,12 @@
 from enum import IntEnum
 from typing import Dict
+from abc import ABC, abstractmethod
 
 BONUS_POINTS = 10
 GOLD_MIN = 50
 SILVER_MIN = 30
 WEDNESDAY_THRESHOLD = 9
 WEEKEND_THRESHOLD = 9
-
 grade_label = {"GOLD": 1, "SILVER": 2, "NORMAL": 0}
 
 
@@ -19,54 +19,74 @@ class AttendanceScore(IntEnum):
 class Player:
     def __init__(self, pid, name):
         self.pid = pid
-        self.name = name
-        self.points = 0
-        self.grade = 0
-        self.attendances = {"monday": 0,
-                            "tuesday": 0,
-                            "wednesday": 0,
-                            "thursday": 0,
-                            "friday": 0,
-                            "saturday": 0,
+        self._name: str = name
+        self._points: int = 0
+        self._grade: int = 0
+        self.attendances = {"monday": 0, "tuesday": 0, "wednesday": 0, "thursday": 0, "friday": 0, "saturday": 0,
                             "sunday": 0}
-        self.wednesday_count = 0
-        self.weekend_count = 0
 
-    def add_point(self, point):
-        self.points += point
+    @property
+    def points(self):
+        return self._points
 
-    def get_attendance(self, day_of_week):
+    @points.setter
+    def points(self, points):
+        self._points = points
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    @property
+    def grade(self):
+        return self._grade
+
+    @grade.setter
+    def grade(self, grade):
+        self._grade = grade
+
+    @property
+    def wednesday_count(self)->int:
+        return self.attendances["wednesday"]
+
+    @property
+    def weekend_count(self)->int:
+        return self.attendances["saturday"] + self.attendances["sunday"]
+
+    def get_attendance(self, day_of_week)->int:
         return self.attendances.get(day_of_week, 0)
 
     def record_attendance(self, day_of_week):
         self.attendances[day_of_week] += 1
 
-    def add_attendance(self, day_of_week):
-        self.record_attendance(day_of_week)
+    def _calc_attendance_point(self, day_of_week):
         if day_of_week == "wednesday":  # 훈련일
             point = AttendanceScore.Training
-            self.wednesday_count += 1
         elif day_of_week == "saturday":  # 주말점수
             point = AttendanceScore.Weekend
-            self.weekend_count += 1
         elif day_of_week == "sunday":  # 주말점수
             point = AttendanceScore.Weekend
-            self.weekend_count += 1
         else:
             point = AttendanceScore.Default
+        self.points += point
 
-        self.add_point(point)
-
+    def add_attendance(self, day_of_week):
+        self.record_attendance(day_of_week)
+        self._calc_attendance_point(day_of_week)
 
 class AttendanceSystem:
     def __init__(self, players):
         self.players: Dict[str, Player] = players
-        self.next_pid = 0
+        self._next_pid = 0
 
     def get_or_create_player(self, name):
         if name not in self.players:
-            self.next_pid += 1
-            self.players[name] = Player(self.next_pid, name)
+            self._next_pid += 1
+            self.players[name] = Player(self._next_pid, name)
         return self.players[name]
 
     def print_result(self):
@@ -100,6 +120,7 @@ class AttendanceSystem:
                 print(player.name)
 
 
+
 def input_file(limits=500):  # 리팩하기쉽지않으니 잘 구분해주세요  # 숫자코드를 읽는사람이 헷갈리죠
     attendance_system = AttendanceSystem(players={})  # <-- 뭐해주지..  player class를 관리해주는 역할
 
@@ -118,7 +139,6 @@ def input_file(limits=500):  # 리팩하기쉽지않으니 잘 구분해주세�
 
     except FileNotFoundError:
         print("파일을 찾을 수 없습니다.")
-
 
 if __name__ == "__main__":
     input_file()
