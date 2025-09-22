@@ -9,20 +9,24 @@ class Score(ABC):
     def score(self):
         pass
 
+
 class TrainingScore(Score):
     @property
     def score(self):
         return 3
+
 
 class WeekendScore(Score):
     @property
     def score(self):
         return 2
 
+
 class DefaultScore(Score):
     @property
     def score(self):
         return 1
+
 
 class Player:
     BONUS_POINTS = 10
@@ -48,10 +52,6 @@ class Player:
     @property
     def name(self):
         return self._name
-
-    @name.setter
-    def name(self, name):
-        self._name = name
 
     @property
     def bonus_points(self):
@@ -93,8 +93,8 @@ class Player:
             score = WeekendScore().score
         else:
             score = DefaultScore().score
-        self.points += score
+        return score
 
     def add_attendance(self, day_of_week):
         self._record_attendance(day_of_week)
-        self._calc_attendance_point(day_of_week)
+        self.points += self._calc_attendance_point(day_of_week)
