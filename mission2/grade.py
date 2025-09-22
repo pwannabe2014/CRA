@@ -12,7 +12,7 @@ class Grade(ABC):
         pass
 
     @abstractmethod
-    def match(self, points):
+    def match(self, total_points):
         pass
 
 
@@ -27,8 +27,8 @@ class Gold(Grade):
     def code(self):
         return 1
 
-    def match(self, points):
-        return True if points >= self.THRESHOLD else False
+    def match(self, total_points):
+        return True if total_points >= self.THRESHOLD else False
 
 
 class Silver(Grade):
@@ -42,8 +42,8 @@ class Silver(Grade):
     def code(self):
         return 2
 
-    def match(self, points):
-        return True if points >= self.THRESHOLD else False
+    def match(self, total_points):
+        return True if total_points >= self.THRESHOLD else False
 
 
 class Normal(Grade):
@@ -55,7 +55,7 @@ class Normal(Grade):
     def code(self):
         return 0
 
-    def match(self, points):
+    def match(self, total_points):
         return True
 
 
@@ -63,9 +63,9 @@ class GradeFactory:
     grades = [Gold, Silver, Normal]
 
     @classmethod
-    def create(cls, points) -> Grade:
+    def create(cls, total_points) -> Grade:
         for grade_cls in cls.grades:
             grade = grade_cls()
-            if grade.match(points):
+            if grade.match(total_points):
                 return grade
         raise AttributeError

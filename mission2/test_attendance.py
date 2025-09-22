@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 from unittest.mock import mock_open
-from mission2.attendance import *
+from mission2.attendance import input_file
 
 def test_input_file_output(capsys):
     input_file()
@@ -49,10 +49,3 @@ def test_input_none_line(mocker,capsys):  # 리팩하기쉽지않으니 잘 구�
         input_file()
     # Assert
     assert captured.out == ""
-
-# # player 있는케이스와 없는케이스
-# def test_get_or_create_player(mocker):
-#     mocker.patch("mission2.attendance.players", {})
-#     mocker.patch("mission2.attendance.pid", 0)
-#     player = get_or_create_player("Kang")
-#     assert player.name == "Kang"
